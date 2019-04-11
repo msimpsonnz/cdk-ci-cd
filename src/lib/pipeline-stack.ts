@@ -6,19 +6,6 @@ import lambda = require('@aws-cdk/aws-lambda');
 import secretsmanager = require('@aws-cdk/aws-secretsmanager');
 import ssm = require('@aws-cdk/aws-ssm');
 
-export class LambdaStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
-
-    //const lambdaCode = lambda.Code.asset();
-    new lambda.Function(this, 'Lambda', {
-      runtime: lambda.Runtime.Go1x,
-      code: lambda.Code.asset('resources'),
-      handler: 'main'               
-    });
-  }
-}
-
 export class PipelineStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -110,7 +97,6 @@ export class PipelineStack extends cdk.Stack {
               'cd "/go/src/handler"',
               'go get ./...',
               'golint -set_exit_status',
-              'go tool vet',
               'go tool vet .',
               'go test .' 
             ]
