@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -30,7 +31,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	svc := sqs.New(sess)
 
-	qURL := "https://sqs.ap-southeast-2.amazonaws.com/632298589294/mjsdemo-sqs"
+	qURL := os.Getenv("SQS_QUEUE_NAME")
 
 	var res = []*sqs.SendMessageOutput{}
 

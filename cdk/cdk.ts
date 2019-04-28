@@ -6,8 +6,15 @@ import lambda = require('@aws-cdk/aws-lambda');
 import secretsmanager = require('@aws-cdk/aws-secretsmanager');
 import ssm = require('@aws-cdk/aws-ssm');
 import apigw = require('@aws-cdk/aws-apigateway');
+import sqs = require('@aws-cdk/aws-sqs');
 
 const app = new cdk.App();
+
+const sharedStack = new cdk.Stack(app, 'SharedStack');
+
+const sqsQueue = new sqs.Queue(sharedStack, 'SQS', {
+  visibilityTimeoutSec: 300
+});
 
 const lambdaStack = new cdk.Stack(app, 'LambdaStack', {
   // remove the Stack from `cdk synth` and `cdk deploy`
@@ -19,9 +26,13 @@ const lambdaCode = lambda.Code.cfnParameters();
 const StarterFunc = new lambda.Function(lambdaStack, 'Lambda', {
   code: lambdaCode,
   handler: 'main',
-  runtime: lambda.Runtime.Go1x
+  runtime: lambda.Runtime.Go1x,
+  environment: {
+    SQS_QUEUE_NAME: sqsQueue.queueUrl
+  }
 });
 
+sqsQueue.grantSendMessages(StarterFunc);
 // other resources that your Lambda needs, added to the lambdaStack...
 new apigw.LambdaRestApi(lambdaStack, 'Endpoint', {
   handler: StarterFunc
