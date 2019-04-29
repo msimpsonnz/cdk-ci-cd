@@ -15,9 +15,9 @@ import (
 	guuid "github.com/google/uuid"
 )
 
-//Message body for batch
+//Item body for batch
 type Item struct {
-	Id string `json:"id"`
+	ID string `json:"id"`
 }
 
 var sess = session.Must(session.NewSessionWithOptions(session.Options{
@@ -36,7 +36,7 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) {
 		id := guuid.New()
 
 		item := Item{
-			Id: id.String(),
+			ID: id.String(),
 		}
 				
 		av, err := dynamodbattribute.MarshalMap(item)
