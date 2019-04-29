@@ -15,7 +15,7 @@ const sqsQueue = new sqs.Queue(sharedStack, 'SQS', {
 });
 
 const dataTable = new dynamodb.Table(sharedStack, 'DataTable', {
-  partitionKey: { name: 'datatable', type: dynamodb.AttributeType.String },
+  partitionKey: { name: 'id', type: dynamodb.AttributeType.String },
   billingMode: dynamodb.BillingMode.PayPerRequest
 });
 
