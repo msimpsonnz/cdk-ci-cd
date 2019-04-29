@@ -11,12 +11,13 @@ import (
     "github.com/aws/aws-sdk-go/aws/session"
 	// "github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-    "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	guuid "github.com/google/uuid"
 )
 
 //Message body for batch
-type Message struct {
-	Batch int `json:"batch"`
+type Item struct {
+	Id string `json:"id"`
 }
 
 var sess = session.Must(session.NewSessionWithOptions(session.Options{
@@ -32,7 +33,13 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) {
 
 		fmt.Println(sqsRecord)
 
-		av, err := dynamodbattribute.MarshalMap(record.Body)
+		id := guuid.New()
+
+		item := Item{
+			Id: id.String(),
+		}
+				
+		av, err := dynamodbattribute.MarshalMap(item)
 		if err != nil {
 			fmt.Println("Got error marshalling map:")
 		}
