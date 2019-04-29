@@ -37,3 +37,5 @@ new apigw.LambdaRestApi(lambdaStarterStack, 'Endpoint', {
 const staterPipelineStack = new cdk.Stack(app, 'StarterPipelineStack');
 MakePipeline(staterPipelineStack, 'StarterPipelineStack', 'cdk-ci-cd', 'LambdaStarterStack', 'starter', lambdaCode);
 
+// const workerPipelineStack = new cdk.Stack(app, 'StarterPipelineStack');
+// MakePipeline(workerPipelineStack, 'WorkerPipelineStack', 'cdk-ci-cd', 'LambdaWorkerStack', 'worker', lambdaCode);
