@@ -23,9 +23,9 @@ const lambdaStarterStack = new cdk.Stack(app, 'LambdaStarterStack', {
   autoDeploy: false,
 });
 
-const lambdaCode = lambda.Code.cfnParameters();
+const lambdaStarterCode = lambda.Code.cfnParameters();
 const starterFunc = new lambda.Function(lambdaStarterStack, 'Lambda', {
-  code: lambdaCode,
+  code: lambdaStarterCode,
   handler: 'main',
   runtime: lambda.Runtime.Go1x,
   environment: {
@@ -39,15 +39,16 @@ new apigw.LambdaRestApi(lambdaStarterStack, 'StarterEndpoint', {
   handler: starterFunc
 });
 
-const staterPipelineStack = new cdk.Stack(app, 'StarterPipelineStack');
-MakePipeline(staterPipelineStack, 'StarterPipelineStack', 'cdk-ci-cd', 'LambdaStarterStack', 'starter', lambdaCode);
+const pipelineStarterStack = new cdk.Stack(app, 'PipelineStarterStack');
+MakePipeline(pipelineStarterStack, 'PipelineStarterStack', 'cdk-ci-cd', 'LambdaStarterStack', 'starter', lambdaStarterCode);
 
 const lambdaWorkerStack = new cdk.Stack(app, 'LambdaWorkerStack', {
   autoDeploy: false,
 });
 
+const lambdaWorkerCode = lambda.Code.cfnParameters();
 const workerFunc = new lambda.Function(lambdaWorkerStack, 'Lambda', {
-  code: lambdaCode,
+  code: lambdaWorkerCode,
   handler: 'main',
   runtime: lambda.Runtime.Go1x,
   environment: {
@@ -58,5 +59,5 @@ const workerEventSource = new lambdaEvents.SqsEventSource(sqsQueue);
 workerFunc.addEventSource(workerEventSource);
 dataTable.grantReadWriteData(workerFunc);
 
-const workerPipelineStack = new cdk.Stack(app, 'WorkerPipelineStack');
-MakePipeline(workerPipelineStack, 'WorkerPipelineStack', 'cdk-ci-cd', 'LambdaWorkerStack', 'worker', lambdaCode);
+const pipelineWorkerStack = new cdk.Stack(app, 'PipelineWorkerStack');
+MakePipeline(pipelineWorkerStack, 'PipelineWorkerStack', 'cdk-ci-cd', 'LambdaWorkerStack', 'worker', lambdaWorkerCode);
