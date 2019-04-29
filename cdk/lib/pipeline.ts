@@ -142,7 +142,6 @@ function GitHubRepo(stack: cdk.Stack, actionName: string, repo: string, output: 
         secretArn: secretArnParam
     });
 
-
     return new codepipeline_actions.GitHubSourceAction({
         actionName: actionName,
         owner: 'msimpsonnz',

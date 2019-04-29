@@ -1,14 +1,15 @@
 package main
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
-	"os"
+	//"os"
+	"context"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
+	// "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"
-    "github.com/aws/aws-sdk-go/service/sqs"
+    // "github.com/aws/aws-sdk-go/service/sqs"
 )
 
 //Message body for batch
@@ -21,45 +22,12 @@ var sess = session.Must(session.NewSessionWithOptions(session.Options{
 }))
 
 //Handler for Lambda function entry point
-func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func Handler(ctx context.Context, sqsEvent events.SQSEvent) {
+	for _, record := range sqsEvent.Records {
+		sqsRecord := record.MessageId
 
-	var msg Message
-	err := json.Unmarshal([]byte(request.Body), &msg)
-	if err != nil {
-		fmt.Println("There was an error:", err)
+		fmt.Println(sqsRecord)
 	}
-
-	svc := sqs.New(sess)
-
-	qURL := os.Getenv("SQS_QUEUE_NAME")
-
-	var res = []*sqs.SendMessageOutput{}
-
-	for index := 0; index < msg.Batch; index++ {
-		result, err := svc.SendMessage(&sqs.SendMessageInput{
-			DelaySeconds: aws.Int64(10),
-			MessageBody: aws.String("Go...go...go"),
-			QueueUrl:    &qURL,
-		})
-		res = append(res, result)
-		if err != nil {
-			fmt.Println("Error", err)
-		}
-	}
-
-	if err != nil {
-        fmt.Println("Error", err)
-        return events.APIGatewayProxyResponse{
-			Body:       fmt.Sprintf("Failed"),
-			StatusCode: 500,
-		}, nil
-	}
-	
-	return events.APIGatewayProxyResponse{
-			Body:       fmt.Sprintf("Job Accepted: %s", string(len(res))),
-			StatusCode: 200,
-		}, nil
-
 }
 
 func main() {
