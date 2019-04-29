@@ -1,5 +1,4 @@
 import cdk = require('@aws-cdk/cdk')
-import codepipeline = require('@aws-cdk/aws-codepipeline');
 import lambda = require('@aws-cdk/aws-lambda');
 import apigw = require('@aws-cdk/aws-apigateway');
 import sqs = require('@aws-cdk/aws-sqs');
@@ -36,5 +35,5 @@ new apigw.LambdaRestApi(lambdaStarterStack, 'Endpoint', {
 });
 
 const staterPipelineStack = new cdk.Stack(app, 'StarterPipelineStack');
-const starterPipeline = MakePipeline(staterPipelineStack, 'StarterPipelineStack', 'cdk-ci-cd', 'LambdaStarterStack', 'starter', lambdaCode);
+MakePipeline(staterPipelineStack, 'StarterPipelineStack', 'cdk-ci-cd', 'LambdaStarterStack', 'starter', lambdaCode);
 
