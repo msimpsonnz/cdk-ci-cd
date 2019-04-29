@@ -19,7 +19,7 @@ export function MakePipeline(stack: cdk.Stack, stackName: string, sourceRepo: st
         actions: [cdkSourceAction]
     });
 
-    const cdkBuildProject = makeCdkBuildProject(stack, stackName);
+    const cdkBuildProject = makeCdkBuildProject(stack, lambdaStackName);
 
     const cdkBuildOutput = new codepipeline.Artifact();
     const cdkBuildAction = new codepipeline_actions.CodeBuildAction({
