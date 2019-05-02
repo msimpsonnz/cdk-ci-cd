@@ -1,8 +1,11 @@
 import cdk = require('@aws-cdk/cdk');
 import dynamodb = require('@aws-cdk/aws-dynamodb')
+import iam = require('@aws-cdk/aws-iam')
+import { ServicePrincipal } from '@aws-cdk/aws-iam'
 import lambda = require('@aws-cdk/aws-lambda');
 import lambdaEvents = require('@aws-cdk/aws-lambda-event-sources');
 import apigw = require('@aws-cdk/aws-apigateway');
+import { IntegrationOptions, IntegrationResponse, MethodOptions, MethodResponse, EmptyModel } from '@aws-cdk/aws-apigateway';
 import sqs = require('@aws-cdk/aws-sqs');
 import { MakePipeline} from './lib/pipeline';
 
@@ -19,29 +22,55 @@ const dataTable = new dynamodb.Table(sharedStack, 'DataTable', {
   billingMode: dynamodb.BillingMode.PayPerRequest
 });
 
-const lambdaStarterStack = new cdk.Stack(app, 'LambdaStarterStack', {
-  autoDeploy: false,
-});
-lambdaStarterStack.addDependency(sharedStack);
-const lambdaStarterCode = lambda.Code.cfnParameters();
-const starterFunc = new lambda.Function(lambdaStarterStack, 'Lambda', {
-  code: lambdaStarterCode,
-  handler: 'main',
-  runtime: lambda.Runtime.Go1x,
-  environment: {
-    SQS_QUEUE_NAME: sqsQueue.queueUrl
-  }
+const apiGatewayRole = new iam.Role(sharedStack, 'ApiGatewayRole', {
+  assumedBy: new ServicePrincipal('apigateway.amazonaws.com')
 });
 
-sqsQueue.grantSendMessages(starterFunc);
+var model :EmptyModel = {
+  modelId: "Empty"
+};
 
-new apigw.LambdaRestApi(lambdaStarterStack, 'StarterEndpoint', {
-  handler: starterFunc
+var methodResponse :MethodResponse = {
+  statusCode: '200',
+  responseModels: {'application/json': model}
+};
+
+var methodOptions :MethodOptions = {
+  methodResponses: [
+    methodResponse
+  ]
+};
+
+var integrationResponse :IntegrationResponse = {
+  statusCode: '200'
+};
+
+var integrationOptions :IntegrationOptions = {
+  credentialsRole: apiGatewayRole,
+  requestParameters: {
+    'integration.request.header.Content-Type': "'application/x-www-form-urlencoded'"
+  },
+  requestTemplates: {
+    'application/json': 'Action=SendMessage&QueueUrl=$util.urlEncode("' + sqsQueue.queueUrl + '")&MessageBody=$util.urlEncode($input.body)'
+  },
+  integrationResponses: [
+    integrationResponse
+  ]
+};
+
+const apiGatewayIntegration = new apigw.AwsIntegration({ 
+  service: "sqs",
+  path: sharedStack.env.account + '/' + sqsQueue.queueName,
+  integrationHttpMethod: "POST",
+  options: integrationOptions,
 });
 
-const pipelineStarterStack = new cdk.Stack(app, 'PipelineStarterStack');
-pipelineStarterStack.addDependency(lambdaStarterStack);
-MakePipeline(pipelineStarterStack, 'PipelineStarterStack', 'cdk-ci-cd', 'LambdaStarterStack', 'starter', lambdaStarterCode);
+const apiGateway = new apigw.RestApi(sharedStack, "Endpoint");
+
+const msg = apiGateway.root.addResource('msg');
+msg.addMethod('POST', apiGatewayIntegration, methodOptions);
+
+sqsQueue.grantSendMessages(apiGatewayRole);
 
 const lambdaWorkerStack = new cdk.Stack(app, 'LambdaWorkerStack', {
   autoDeploy: false,
