@@ -22,29 +22,32 @@ const dataTable = new dynamodb.Table(sharedStack, 'DataTable', {
   billingMode: dynamodb.BillingMode.PayPerRequest
 });
 
+//Create an IAM Role for API Gateway to assume
 const apiGatewayRole = new iam.Role(sharedStack, 'ApiGatewayRole', {
   assumedBy: new ServicePrincipal('apigateway.amazonaws.com')
 });
 
+//Create an empty response model for API Gateway
 var model :EmptyModel = {
   modelId: "Empty"
 };
-
+//Create a method response for API Gateway using the empty model
 var methodResponse :MethodResponse = {
   statusCode: '200',
   responseModels: {'application/json': model}
 };
-
+//Add the method options with method response to use in API Method
 var methodOptions :MethodOptions = {
   methodResponses: [
     methodResponse
   ]
 };
-
+//Create intergration response for SQS
 var integrationResponse :IntegrationResponse = {
   statusCode: '200'
 };
 
+//Create integration options for API Method
 var integrationOptions :IntegrationOptions = {
   credentialsRole: apiGatewayRole,
   requestParameters: {
@@ -58,6 +61,7 @@ var integrationOptions :IntegrationOptions = {
   ]
 };
 
+//Create the SQS Integration
 const apiGatewayIntegration = new apigw.AwsIntegration({ 
   service: "sqs",
   path: sharedStack.env.account + '/' + sqsQueue.queueName,
@@ -65,11 +69,14 @@ const apiGatewayIntegration = new apigw.AwsIntegration({
   options: integrationOptions,
 });
 
+//Create the API Gateway
 const apiGateway = new apigw.RestApi(sharedStack, "Endpoint");
 
+//Create a API Gateway Resource
 const msg = apiGateway.root.addResource('msg');
+//Create a Resource Method
 msg.addMethod('POST', apiGatewayIntegration, methodOptions);
-
+//Grant API GW IAM Role access to post to SQS
 sqsQueue.grantSendMessages(apiGatewayRole);
 
 const lambdaWorkerStack = new cdk.Stack(app, 'LambdaWorkerStack', {
